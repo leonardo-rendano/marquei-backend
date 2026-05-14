@@ -4,8 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { ProfessionalsService } from '../professionals/professionals.service';
 import { AvailabilityRepository } from './availability.repository';
-import { ProfessionalsService } from '../modules/professionals/professionals.service';
 
 @Injectable()
 export class AvailabilityService {

@@ -92,7 +92,7 @@ model Appointment {
   startAt DateTime
   endAt   DateTime
 
-  status AppointmentStatus @default(PENDING)
+  status AppointmentStatus @default(CONFIRMED)
 
   notes String?
 
