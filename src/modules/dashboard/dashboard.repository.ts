@@ -61,8 +61,7 @@ export class DashboardRepository {
     });
 
     return appointments.reduce(
-      (total, appointment) => total + appointment.service.price,
-
+      (total, appointment) => total + Number(appointment.service.price),
       0,
     );
   }
