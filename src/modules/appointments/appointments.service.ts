@@ -6,9 +6,10 @@ import {
 
 import { AppointmentStatus } from '@prisma/client';
 
-import { UsersService } from '../users/users.service';
+import { AvailabilityService } from '../availability/availability.service';
 import { ProfessionalsService } from '../professionals/professionals.service';
 import { ServicesService } from '../services/services.service';
+import { UsersService } from '../users/users.service';
 import { AppointmentsRepository } from './appointments.repository';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class AppointmentsService {
     private readonly usersService: UsersService,
     private readonly professionalsService: ProfessionalsService,
     private readonly servicesService: ServicesService,
+    private readonly availabilityService: AvailabilityService,
   ) {}
 
   async create(dto: any) {
@@ -104,5 +106,84 @@ export class AppointmentsService {
     return this.repository.update(id, {
       status: AppointmentStatus.COMPLETED,
     });
+  }
+
+  async getAvailableSlots(
+    professionalId: string,
+    date: string,
+    serviceId: string,
+  ) {
+    const service = await this.servicesService.findById(serviceId);
+
+    const [year, month, day] = date.split('-').map(Number);
+
+    const selectedDate = new Date(year, month - 1, day);
+
+    const startOfDay = new Date(selectedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(selectedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const weekDay = selectedDate.getDay();
+
+    const availabilities =
+      await this.availabilityService.findByProfessional(professionalId);
+
+    const availability = availabilities.find(
+      (item) => item.weekDay === weekDay,
+    );
+
+    if (!availability) {
+      return [];
+    }
+
+    const appointments = await this.repository.findByProfessionalAndDate(
+      professionalId,
+      startOfDay,
+      endOfDay,
+    );
+
+    const slots: string[] = [];
+
+    const [startHour, startMinute] = availability.startTime
+      .split(':')
+      .map(Number);
+
+    const [endHour, endMinute] = availability.endTime.split(':').map(Number);
+
+    const current = new Date(selectedDate);
+
+    current.setHours(startHour, startMinute, 0, 0);
+
+    const endBoundary = new Date(selectedDate);
+
+    endBoundary.setHours(endHour, endMinute, 0, 0);
+
+    while (current < endBoundary) {
+      const slotStart = new Date(current);
+
+      const slotEnd = new Date(current.getTime() + service.duration * 60000);
+
+      const hasConflict = appointments.some(
+        (appointment) =>
+          slotStart < appointment.endAt && slotEnd > appointment.startAt,
+      );
+
+      const isPast = slotStart < new Date();
+
+      if (!hasConflict && !isPast && slotEnd <= endBoundary) {
+        slots.push(
+          slotStart.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        );
+      }
+
+      current.setMinutes(current.getMinutes() + service.duration);
+    }
+
+    return slots;
   }
 }

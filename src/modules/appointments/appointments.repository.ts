@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Appointment, Prisma } from '@prisma/client';
 import { PrismaService } from '../../infra/prisma/prisma.service';
+import { AppointmentStatus } from '@prisma/client';
+
+import { BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class AppointmentsRepository {
@@ -73,5 +76,91 @@ export class AppointmentsRepository {
     });
 
     return count > 0;
+  }
+
+  findByProfessionalAndDate(
+    professionalId: string,
+    startOfDay: Date,
+    endOfDay: Date,
+  ) {
+    return this.prisma.appointment.findMany({
+      where: {
+        professionalId,
+        status: {
+          not: 'CANCELLED',
+        },
+        startAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      orderBy: {
+        startAt: 'asc',
+      },
+    });
+  }
+
+  async createWithTransaction(data: {
+    clientId: string;
+    professionalId: string;
+    serviceId: string;
+    startAt: Date;
+    endAt: Date;
+  }) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const conflict = await tx.appointment.findFirst({
+          where: {
+            professionalId: data.professionalId,
+
+            status: {
+              not: 'CANCELLED',
+            },
+
+            startAt: {
+              lt: data.endAt,
+            },
+
+            endAt: {
+              gt: data.startAt,
+            },
+          },
+        });
+
+        if (conflict) {
+          throw new BadRequestException('Horário indisponível');
+        }
+
+        return tx.appointment.create({
+          data: {
+            startAt: data.startAt,
+            endAt: data.endAt,
+
+            status: AppointmentStatus.CONFIRMED,
+
+            client: {
+              connect: {
+                id: data.clientId,
+              },
+            },
+
+            professional: {
+              connect: {
+                id: data.professionalId,
+              },
+            },
+
+            service: {
+              connect: {
+                id: data.serviceId,
+              },
+            },
+          },
+        });
+      },
+      {
+        isolationLevel: 'Serializable',
+      },
+    );
   }
 }

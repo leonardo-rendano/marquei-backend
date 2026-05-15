@@ -1,11 +1,23 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { AppointmentsService } from './appointments.service';
+
+import { Roles } from '../../common/decorators/roles.decorator';
 
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private readonly service: AppointmentsService) {}
 
   @Post()
+  @Roles(Role.CLIENTE)
   create(@Body() dto: any) {
     return this.service.create(dto);
   }
@@ -26,7 +38,22 @@ export class AppointmentsController {
   }
 
   @Patch(':id/complete')
+  @Roles(Role.PROFISSIONAL)
   complete(@Param('id') id: string) {
     return this.service.complete(id);
+  }
+
+  @Get('slots/:professionalId')
+  getSlots(
+    @Param('professionalId')
+    professionalId: string,
+
+    @Query('date')
+    date: string,
+
+    @Query('serviceId')
+    serviceId: string,
+  ) {
+    return this.service.getAvailableSlots(professionalId, date, serviceId);
   }
 }
