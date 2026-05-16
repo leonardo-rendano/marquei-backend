@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Appointment, Prisma } from '@prisma/client';
+import { Appointment, AppointmentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { AppointmentStatus } from '@prisma/client';
 
 import { BadRequestException } from '@nestjs/common';
 
@@ -24,7 +23,11 @@ export class AppointmentsRepository {
     return this.prisma.appointment.findMany({
       include: {
         client: true,
-        professional: true,
+        professional: {
+          include: {
+            user: true,
+          },
+        },
         service: true,
       },
       orderBy: {
@@ -56,6 +59,15 @@ export class AppointmentsRepository {
     return this.prisma.appointment.update({
       where: { id },
       data,
+      include: {
+        client: true,
+        professional: {
+          include: {
+            user: true,
+          },
+        },
+        service: true,
+      },
     });
   }
 
@@ -162,5 +174,45 @@ export class AppointmentsRepository {
         isolationLevel: 'Serializable',
       },
     );
+  }
+
+  findByProfessionalUserId(userId: string) {
+    return this.prisma.appointment.findMany({
+      where: {
+        professional: {
+          userId,
+        },
+      },
+      include: {
+        client: true,
+        professional: {
+          include: {
+            user: true,
+          },
+        },
+        service: true,
+      },
+      orderBy: {
+        startAt: 'asc',
+      },
+    });
+  }
+
+  markNoShow(id: string) {
+    return this.prisma.appointment.update({
+      where: { id },
+      data: {
+        status: 'NO_SHOW',
+      },
+      include: {
+        client: true,
+        professional: {
+          include: {
+            user: true,
+          },
+        },
+        service: true,
+      },
+    });
   }
 }

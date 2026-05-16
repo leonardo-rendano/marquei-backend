@@ -67,7 +67,7 @@ export class DashboardRepository {
   }
 
   async mostRequestedServices(startDate: Date, endDate: Date) {
-    return this.prisma.appointment.groupBy({
+    const grouped = await this.prisma.appointment.groupBy({
       by: ['serviceId'],
 
       where: {
@@ -77,13 +77,33 @@ export class DashboardRepository {
         },
       },
 
-      _count: true,
+      _count: {
+        serviceId: true,
+      },
 
       orderBy: {
         _count: {
           serviceId: 'desc',
         },
       },
+    });
+
+    const services = await this.prisma.service.findMany({
+      where: {
+        id: {
+          in: grouped.map((item) => item.serviceId),
+        },
+      },
+    });
+
+    return grouped.map((item) => {
+      const service = services.find((service) => service.id === item.serviceId);
+
+      return {
+        serviceId: item.serviceId,
+        serviceName: service?.name ?? 'Serviço não encontrado',
+        count: item._count.serviceId,
+      };
     });
   }
 }

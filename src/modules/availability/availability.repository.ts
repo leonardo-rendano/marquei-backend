@@ -6,14 +6,28 @@ import { PrismaService } from '../../infra/prisma/prisma.service';
 export class AvailabilityRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(data: Prisma.AvailabilityCreateInput): Promise<Availability> {
+  create(data: Prisma.AvailabilityCreateInput) {
     return this.prisma.availability.create({
       data,
+      include: {
+        professional: {
+          include: {
+            user: true,
+          },
+        },
+      },
     });
   }
 
   findAll(): Promise<Availability[]> {
     return this.prisma.availability.findMany({
+      include: {
+        professional: {
+          include: {
+            user: true,
+          },
+        },
+      },
       orderBy: [{ weekDay: 'asc' }, { startTime: 'asc' }],
     });
   }

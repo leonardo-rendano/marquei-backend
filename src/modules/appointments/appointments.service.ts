@@ -186,4 +186,20 @@ export class AppointmentsService {
 
     return slots;
   }
+
+  findMyProfessionalSchedule(userId: string) {
+    return this.repository.findByProfessionalUserId(userId);
+  }
+
+  async noShow(id: string) {
+    const appointment = await this.repository.findById(id);
+
+    if (!appointment) {
+      throw new NotFoundException('Agendamento não encontrado');
+    }
+
+    return this.repository.update(id, {
+      status: AppointmentStatus.NO_SHOW,
+    });
+  }
 }

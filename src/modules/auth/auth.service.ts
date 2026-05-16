@@ -1,11 +1,10 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+
+import * as bcrypt from 'bcrypt';
 
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+
+import { Role } from '@prisma/client';
 
 import { UsersService } from '../users/users.service';
 
@@ -17,47 +16,49 @@ export class AuthService {
   ) {}
 
   async register(dto: any) {
-    const exists = await this.usersService.findByEmail(dto.email);
-
-    if (exists) {
-      throw new ConflictException('Email já cadastrado');
-    }
-
-    const password = await bcrypt.hash(dto.password, 10);
-
     const user = await this.usersService.create({
-      ...dto,
-      password,
+      name: dto.name,
+      email: dto.email,
+      password: dto.password,
+      role: dto.role || Role.CLIENTE,
     });
 
     return {
-      message: 'Usuário criado com sucesso',
-      user,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
     };
   }
 
-  async login(dto: any) {
-    const user = await this.usersService.findByEmail(dto.email);
+  async login(email: string, password: string) {
+    const user = await this.usersService.findByEmail(email);
 
     if (!user) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const valid = await bcrypt.compare(dto.password, user.password);
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
-    if (!valid) {
+    if (!passwordMatch) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const token = await this.jwtService.signAsync({
+    const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
-    });
+    };
 
     return {
-      access_token: token,
-      user,
+      accessToken: await this.jwtService.signAsync(payload),
+
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
 }

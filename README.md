@@ -1,71 +1,33 @@
-# 💈 Marquei API
+# Marquei API
 
-Backend do sistema de agendamento online desenvolvido para o case técnico Full Stack.
-
-O objetivo do projeto é substituir o fluxo manual de agendamentos realizado por planilhas e telefonemas, oferecendo uma plataforma moderna para gestão de serviços, profissionais e clientes.
+API do sistema de agendamento para salões, com controle de autenticação, permissões e gerenciamento de agenda.
 
 ---
 
-# 🚀 Tecnologias Utilizadas
+## Stack utilizada
 
 - NestJS
-- TypeScript
 - Prisma ORM
 - PostgreSQL
 - JWT Authentication
 - Bcrypt
 
----
-
-# 🏗️ Arquitetura
-
-O projeto foi estruturado utilizando arquitetura modular com separação por domínio de negócio.
-
-```txt
-src/
- ├── common/
- ├── infra/
- ├── modules/
- │    ├── auth/
- │    ├── users/
- │    ├── professionals/
- │    ├── services/
- │    ├── availability/
- │    ├── appointments/
- │    └── dashboard/
-```
+A stack foi escolhida por permitir uma arquitetura escalável e organizada. O NestJS facilita a separação por módulos, controllers, services e repositories, enquanto o Prisma simplifica a comunicação com o banco de dados e melhora a produtividade no desenvolvimento.
 
 ---
 
-# 📦 Pré-requisitos
+## Como rodar o projeto localmente
 
-Antes de iniciar o projeto, é necessário possuir instalado:
-
-- Node.js 20+
-- PostgreSQL
-- npm
-
----
-
-# ⚙️ Instalação
-
-## 1. Clone o repositório
+### 1. Clone o repositório
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone https://github.com/leonardo-rendano/marquei-backend.git
+cd marquei-backend
 ```
 
 ---
 
-## 2. Acesse a pasta do projeto
-
-```bash
-cd marquei-api
-```
-
----
-
-## 3. Instale as dependências
+## Instale as dependências
 
 ```bash
 npm install
@@ -73,41 +35,17 @@ npm install
 
 ---
 
-# 🛢️ Configuração do Banco de Dados
+## Configure as variáveis de ambiente
 
-## 1. Crie um banco PostgreSQL
-
-Exemplo:
-
-```sql
-CREATE DATABASE marquei;
-```
-
----
-
-## 2. Crie o arquivo `.env`
-
-Na raiz do projeto:
-
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/marquei?schema=public"
-
-JWT_SECRET="supersecret"
-```
-
----
-
-# 🧬 Prisma ORM
-
-## Gerar o Prisma Client
+Crie o arquivo `.env` baseado no `.env.example`:
 
 ```bash
-npx prisma generate
+cp .env.example .env
 ```
 
 ---
 
-## Rodar as migrations
+## Execute as migrations
 
 ```bash
 npx prisma migrate dev
@@ -115,239 +53,93 @@ npx prisma migrate dev
 
 ---
 
-# ▶️ Executando a aplicação
+## Gere o Prisma Client
 
-## Ambiente de desenvolvimento
+```bash
+npx prisma generate
+```
+
+---
+
+## Rode o projeto
 
 ```bash
 npm run start:dev
 ```
 
----
-
-# 🌐 API
-
-A aplicação ficará disponível em:
+A API ficará disponível em:
 
 ```txt
-http://localhost:3000
+http://localhost:3333
 ```
 
 ---
 
-# 🔐 Autenticação
+## Variáveis de ambiente
 
-A API utiliza autenticação JWT Bearer Token.
+### `.env.example`
 
-## Fluxo de autenticação
-
-1. Criar usuário
-2. Fazer login
-3. Receber token JWT
-4. Enviar token no header das requisições protegidas
-
-Exemplo:
-
-```http
-Authorization: Bearer TOKEN
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/marquei"
+JWT_SECRET="sua_chave_secreta"
+PORT=3333
 ```
 
 ---
 
-# 👥 Perfis de Usuário
+## Credenciais de teste
 
-O sistema possui três perfis:
+As credenciais podem ser criadas manualmente ou via seed.
 
-| Perfil       | Responsabilidade                                       |
-| ------------ | ------------------------------------------------------ |
-| GESTOR       | Administração de serviços, profissionais e indicadores |
-| PROFISSIONAL | Visualização e gestão da própria agenda                |
-| CLIENTE      | Agendamento, cancelamento e consulta de horários       |
+### Gestor
 
----
+```txt
+E-mail: gestor@marquei.com
+Senha: 123456
+```
 
-# ✅ Funcionalidades Implementadas
+### Profissional
 
----
+```txt
+E-mail: profissional@marquei.com
+Senha: 123456
+```
 
-## 🔐 Autenticação e Autorização
+### Cliente
 
-### Implementado
-
-- Login com JWT
-- Hash de senha com bcrypt
-- Estratégia JWT (`JwtStrategy`)
-- Guard de autenticação (`JwtAuthGuard`)
-- Controle de permissões por perfil (`RolesGuard`)
-- Decorator customizado `@Roles`
-- Perfis:
-  - GESTOR
-  - PROFISSIONAL
-  - CLIENTE
+```txt
+E-mail: cliente@marquei.com
+Senha: 123456
+```
 
 ---
 
-## 👥 Usuários
+## Decisões de arquitetura
 
-### Implementado
+O backend foi estruturado em módulos por domínio, como autenticação, usuários, profissionais, serviços, disponibilidade, agendamentos e dashboard. Cada módulo possui responsabilidades separadas entre controller, service e repository.
 
-- Cadastro de usuários
-- Busca de usuários
-- Estrutura modular:
-  - Controller
-  - Service
-  - Repository
-  - Module
+As regras de negócio ficam centralizadas na camada de service, enquanto a persistência é abstraída através do Prisma ORM. O sistema utiliza autenticação JWT e controle de permissões por perfil utilizando guards e decorators customizados.
 
 ---
 
-## 💇 Serviços
+## O que ficou de fora
 
-### Implementado
+Algumas funcionalidades ficaram fora do escopo inicial:
 
-- CRUD completo de serviços
-- Campos:
-  - nome
-  - duração
-  - preço
-- Proteção de rotas para gestores
-
----
-
-## 👨‍🔧 Profissionais
-
-### Implementado
-
-- CRUD de profissionais
-- Associação com usuário
-- Associação com serviços executados
-- Estrutura modular completa
+- edição e exclusão de registros;
+- notificações automáticas;
+- logs de auditoria;
+- testes automatizados;
+- cache;
+- filas assíncronas;
+- documentação Swagger;
+- deploy em produção;
+- observabilidade e monitoramento.
 
 ---
 
-## 📅 Disponibilidade / Jornada
+## O que eu faria diferente com mais tempo
 
-### Implementado
+Com mais tempo, eu adicionaria testes automatizados, documentação completa da API com Swagger, filas assíncronas para notificações e logs de auditoria.
 
-- Cadastro de disponibilidade semanal
-- Dias da semana
-- Horários de início e fim
-- Busca de disponibilidade por profissional
-
----
-
-## 📆 Agendamentos
-
-### Implementado
-
-- Criação de agendamentos
-- Cancelamento de agendamentos
-- Conclusão de atendimentos
-- Consulta de horários disponíveis
-- Cálculo inteligente de slots
-- Verificação de conflitos de horário
-- Impedimento de overlap de horários
-- Validação de data futura
-
-### Regras implementadas
-
-- Considera:
-  - jornada do profissional
-  - duração do serviço
-  - horários ocupados
-- Evita double-booking em fluxo normal de uso
-
----
-
-## 📊 Dashboard
-
-### Implementado
-
-- Estrutura de dashboard para gestores
-- Indicadores:
-  - faturamento estimado
-  - serviços mais procurados
-
----
-
-## 🧠 Arquitetura
-
-### Implementado
-
-- NestJS modular
-- Repository Pattern
-- Prisma ORM
-- DTOs
-- Guards
-- Separação por contexto de domínio
-
----
-
-# 🚧 Funcionalidades Pendentes
-
----
-
-## 🔔 Notificações Automáticas
-
-### Não implementado
-
-- Confirmação de agendamento
-- Lembrete 24h antes
-- Notificações de cancelamento/remarcação
-- Processamento assíncrono
-- Retry de notificações
-
----
-
-## 🔁 Remarcação
-
-### Não implementado
-
-- Remarcação de agendamentos
-- Regra de antecedência mínima
-
----
-
-## 📥 Importação em Massa
-
-### Não implementado
-
-- Importação CSV/Excel
-- Processamento assíncrono
-- Controle de status da importação
-- Relatório de falhas por linha
-
----
-
-## 📈 Dashboard Avançado
-
-### Não implementado
-
-- Taxa de ocupação por profissional
-- Taxa de no-show
-- Indicadores temporais avançados
-
----
-
-## 🧪 Testes
-
-### Não implementado
-
-- Testes unitários
-- Testes E2E
-- Testes de concorrência
-
----
-
-# 📌 Observações Técnicas
-
-- O projeto foi desenvolvido utilizando arquitetura modular orientada a domínio.
-- A camada de acesso ao banco foi abstraída utilizando Repository Pattern.
-- O cálculo de disponibilidade considera duração do serviço, jornada do profissional e conflitos existentes.
-- O sistema possui controle de autorização baseado em roles.
-
----
-
-# 👨‍💻 Autor
-
-Leonardo Rendano
+Também evoluiria o sistema de permissões para uma camada mais robusta, adicionaria tratamento global de exceções mais completo e implementaria observabilidade com logs estruturados e monitoramento.

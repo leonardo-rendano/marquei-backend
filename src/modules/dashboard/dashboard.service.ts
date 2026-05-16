@@ -45,13 +45,9 @@ export class DashboardService {
       totalAppointments,
       completedAppointments,
       noShowAppointments,
-
       noShowRate,
-
       completionRate,
-
       estimatedRevenue,
-
       mostRequestedServices,
     };
   }
